@@ -4,6 +4,14 @@ from fabric.api import *
 env.use_ssh_config = True
 
 
+def commit():
+    local("git add -p && git commit")
+
+
+def push():
+    local("git push")
+
+
 def local_repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
     with hide('running', 'stdout', 'stderr'):
         is_done = True
