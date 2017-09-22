@@ -12,6 +12,33 @@ def push():
     local("git push")
 
 
+def apt_update():
+    with hide('running', 'stdout', 'stderr'):
+        is_done = True
+
+        try:
+            sudo("apt update", shell=False)
+            sudo("apt -y upgrade", shell=False)
+        except Exception as e:
+            print(str(e))
+            is_done = False
+        finally:
+            return is_done
+
+
+def yum_update():
+    with hide('running', 'stdout', 'stderr'):
+        is_done = True
+
+        try:
+            sudo("yum -y update", shell=False)
+        except Exception as e:
+            print(str(e))
+            is_done = False
+        finally:
+            return is_done
+
+
 def local_repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
     with hide('running', 'stdout', 'stderr'):
         is_done = True
@@ -56,5 +83,51 @@ def remote_repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
             return is_done
 
 
-def test_remote():
-    run('uname -n')
+def remote_setup():
+    with hide('running', 'stdout', 'stderr'):
+        is_done = True
+        apt_sudoers = "matt * = (root) NOPASSWD: /usr/bin/apt"
+        yum_sudoers = "matt * = (root) NOPASSWD: /usr/bin/yum"
+        power_sudoers = "matt * = (root) NOPASSWD: /sbin/reboot"
+
+        try:
+            sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % apt_sudoers)
+            sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % yum_sudoers)
+            sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % power_sudoers)
+        except Exception as e:
+            print(str(e))
+            is_done = False
+        finally:
+            return is_done
+
+
+def remote_setup_patch():
+    with show('running', 'stdout', 'stderr'):
+        is_done = True
+        power_sudoers = "matt * = (root) NOPASSWD: /sbin/reboot"
+
+        try:
+            sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % power_sudoers)
+        except Exception as e:
+            print(str(e))
+            is_done = False
+        finally:
+            return is_done
+
+
+def updates():
+    with show('running', 'stdout', 'stderr'):
+        is_done = True
+
+        try:
+            if run("[[ -e /usr/bin/apt ]]"):
+                # apt_update()
+                print("Worked")
+            else:
+                # yum_update()
+                print("Nope")
+        except Exception as e:
+            print(str(e))
+            is_done = False
+        finally:
+            return is_done
