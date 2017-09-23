@@ -12,6 +12,19 @@ def push():
     local("git push")
 
 
+def reboot():
+    with show('running', 'stdout', 'stderr'):
+        is_done = True
+
+        try:
+            sudo("shutdown -r now", shell=False)
+        except Exception as e:
+            print(str(e))
+            is_done = False
+        finally:
+            return is_done
+
+
 def apt_update():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
@@ -116,16 +129,17 @@ def remote_setup_patch():
 
 
 def updates():
-    with show('running', 'stdout', 'stderr'):
+    with hide('running', 'stdout', 'stderr'):
         is_done = True
+        sysType = run("[[ -e /usr/bin/apt ]] && echo 'apt' || echo 'yum'")
 
         try:
-            if run("[[ -e /usr/bin/apt ]]"):
-                # apt_update()
-                print("Worked")
+            if (sysType == "apt"):
+                apt_update()
+            elif (sysType == "yum"):
+                yum_update()
             else:
-                # yum_update()
-                print("Nope")
+                raise ValueError("I don't recognize this machine type")
         except Exception as e:
             print(str(e))
             is_done = False
