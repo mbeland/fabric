@@ -101,7 +101,7 @@ def remote_setup():
         is_done = True
         apt_sudoers = "matt * = (root) NOPASSWD: /usr/bin/apt"
         yum_sudoers = "matt * = (root) NOPASSWD: /usr/bin/yum"
-        power_sudoers = "matt * = (root) NOPASSWD: /sbin/reboot"
+        power_sudoers = "matt * = (root) NOPASSWD: /sbin/shutdown"
 
         try:
             sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % apt_sudoers)
@@ -117,7 +117,7 @@ def remote_setup():
 def remote_setup_patch():
     with show('running', 'stdout', 'stderr'):
         is_done = True
-        power_sudoers = "matt * = (root) NOPASSWD: /sbin/reboot"
+        power_sudoers = "matt * = (root) NOPASSWD: /sbin/shutdown"
 
         try:
             sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % power_sudoers)
