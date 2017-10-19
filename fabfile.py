@@ -1,7 +1,9 @@
 from fabric.api import *
+from StringIO import StringIO
 
 
 env.use_ssh_config = True
+repoList = {}
 
 
 def commit():
@@ -13,11 +15,11 @@ def push():
 
 
 def reboot():
-    with show('running', 'stdout', 'stderr'):
+    with hide('running', 'stdout', 'stderr'):
         is_done = True
 
         try:
-            sudo("shutdown -r now", shell=False)
+            sudo("shutdown -r 1", shell=False)
         except Exception as e:
             print(str(e))
             is_done = False
@@ -30,6 +32,7 @@ def apt_update():
         is_done = True
 
         try:
+            print("Updating system...")
             sudo("apt update", shell=False)
             sudo("apt -y upgrade", shell=False)
         except Exception as e:
@@ -44,7 +47,28 @@ def yum_update():
         is_done = True
 
         try:
+            print("Updating system...")
             sudo("yum -y update", shell=False)
+        except Exception as e:
+            print(str(e))
+            is_done = False
+        finally:
+            return is_done
+
+
+def opkg_update():
+    with show('running', 'stdout', 'stderr'):
+        is_done = True
+
+        try:
+            print("Updating system...")
+            run("opkg update", shell=False)
+            packages = run("opkg list-upgradable | awk '{print $1}' | "
+                           "sed ':M;N;$!bM;s#\\n# #g'", shell=False)
+            if packages:
+                run("opkg upgrade %s" % packages, shell=False)
+            else:
+                print("No updated packages")
         except Exception as e:
             print(str(e))
             is_done = False
@@ -114,20 +138,6 @@ def remote_setup():
             return is_done
 
 
-def remote_setup_patch():
-    with show('running', 'stdout', 'stderr'):
-        is_done = True
-        power_sudoers = "matt * = (root) NOPASSWD: /sbin/shutdown"
-
-        try:
-            sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % power_sudoers)
-        except Exception as e:
-            print(str(e))
-            is_done = False
-        finally:
-            return is_done
-
-
 def updates():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
@@ -136,10 +146,49 @@ def updates():
         try:
             if (sysType == "apt"):
                 apt_update()
+                updateRepos()
             elif (sysType == "yum"):
                 yum_update()
+                updateRepos()
             else:
                 raise ValueError("I don't recognize this machine type")
+        except Exception as e:
+            print(str(e))
+            is_done = False
+        finally:
+            return is_done
+
+
+def readRepoList(repoListFile='~/.repoList'):
+    with hide('running', 'stdout', 'stderr'):
+        is_done = True
+        fd = StringIO()
+
+        try:
+            get(repoListFile, fd)
+            contents = fd.getvalue()
+            for line in contents.splitlines():
+                if line.startswith('#'):
+                    next
+                else:
+                    newRep = line.split(':')
+                    repoList[newRep[0]] = newRep[1]
+        except Exception as e:
+            print(str(e))
+            is_done = False
+        finally:
+            return is_done
+
+
+def updateRepos():
+    with hide('running', 'stdout', 'stderr'):
+        is_done = True
+
+        try:
+            readRepoList()
+            readRepoList('~/.repoList.local')
+            for key in repoList:
+                remote_repo_update(key, repoList[key])
         except Exception as e:
             print(str(e))
             is_done = False
