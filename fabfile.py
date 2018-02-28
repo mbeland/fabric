@@ -1,5 +1,5 @@
 from fabric.api import *
-from StringIO import StringIO
+from io import StringIO
 
 
 env.use_ssh_config = True
