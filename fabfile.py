@@ -1,4 +1,5 @@
 from fabric.api import *
+import os
 from io import StringIO
 
 
@@ -6,12 +7,10 @@ env.use_ssh_config = True
 repoList = {}
 
 
-def commit():
-    local("git add -p && git commit")
-
-
-def push():
-    local("git push")
+def get_immediate_subdirectories(a_dir='~/repos/'):
+    a_dir = os.path.expanduser(a_dir)
+    return [name for name in os.listdir(a_dir)
+            if os.path.isdir(os.path.join(a_dir, name))]
 
 
 def reboot():
@@ -76,29 +75,7 @@ def opkg_update():
             return is_done
 
 
-def local_repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
-    with hide('running', 'stdout', 'stderr'):
-        is_done = True
-
-        try:
-            with lcd(repoDirectory):
-                r = local('git pull', capture=True)
-                if 'Already up-to-date' in r.stdout:
-                    print("%s already up-to-date" % repoName)
-                else:
-                    print("%s updated" % repoName)
-                pathList = local('ls', capture=True)
-                if 'permset.sh' in pathList.stdout:
-                    print("%s - updating permissions" % repoName)
-                    local('./permset.sh')
-        except Exception as e:
-            print(str(e))
-            is_done = False
-        finally:
-            return is_done
-
-
-def remote_repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
+def repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
     with hide('running', 'stdout', 'stderr'):
         is_done = True
 
@@ -120,7 +97,7 @@ def remote_repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
             return is_done
 
 
-def remote_setup():
+def setup():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
         apt_sudoers = "matt * = (root) NOPASSWD: /usr/bin/apt"
@@ -160,14 +137,13 @@ def updates():
 
 
 def readRepoList(repoListFile='~/.repoList'):
-    with hide('running', 'stdout', 'stderr'):
+    with show('running', 'stdout', 'stderr'):
         is_done = True
-        fd = StringIO()
 
         try:
-            get(repoListFile, fd)
-            contents = fd.getvalue()
-            for line in contents.splitlines():
+            contents = run("cat %s" % repoListFile)
+            for line in contents:
+                print(line)
                 if line.startswith('#'):
                     next
                 else:
@@ -183,12 +159,15 @@ def readRepoList(repoListFile='~/.repoList'):
 def updateRepos():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
+        reposPath = '~/repos/'
 
         try:
             readRepoList()
-            readRepoList('~/.repoList.local')
             for key in repoList:
-                remote_repo_update(key, repoList[key])
+                repo_update(key, repoList[key])
+            for reposDir in get_immediate_subdirectories(reposPath):
+                reposDir = reposPath + repoDir
+                repo_update(reposDir, reposDir)
         except Exception as e:
             print(str(e))
             is_done = False
