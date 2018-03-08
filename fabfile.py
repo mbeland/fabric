@@ -173,16 +173,3 @@ def updateRepos():
             is_done = False
         finally:
             return is_done
-
-def system_type():
-    with hide('running', 'stdout', 'stderr'):
-        is_done = True
-
-        try:
-            type = run("uname -s")
-            print(str(type))
-        except Exception as e:
-            print(str(e))
-            is_done = False
-        finally:
-            return is_done
