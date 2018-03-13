@@ -1,6 +1,6 @@
 from fabric.api import *
 import os
-from io import StringIO
+from io import StringIO, BytesIO
 
 
 env.use_ssh_config = True
@@ -8,9 +8,10 @@ repoList = {}
 
 
 def get_immediate_subdirectories(a_dir='~/repos/'):
-    a_dir = os.path.expanduser(a_dir)
-    return [name for name in os.listdir(a_dir)
-            if os.path.isdir(os.path.join(a_dir, name))]
+    result = run("find %s -maxdepth 1 -type d" % a_dir)
+    result = result.splitlines()
+    del result[0]
+    return result
 
 
 def reboot():
@@ -136,14 +137,16 @@ def updates():
             return is_done
 
 
-def readRepoList(repoListFile='~/.repoList'):
-    with show('running', 'stdout', 'stderr'):
+def readRepoList():
+    with hide('running', 'stdout', 'stderr'):
         is_done = True
+        fd = BytesIO()
 
         try:
-            contents = run("cat %s" % repoListFile)
+            get('~/.repoList', fd)
+            contents = fd.getvalue().splitlines()
             for line in contents:
-                print(line)
+                line = line.decode()
                 if line.startswith('#'):
                     next
                 else:
@@ -159,15 +162,15 @@ def readRepoList(repoListFile='~/.repoList'):
 def updateRepos():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
-        reposPath = '~/repos/'
+        reposDir = '~/repos/'
 
         try:
             readRepoList()
             for key in repoList:
                 repo_update(key, repoList[key])
-            for reposDir in get_immediate_subdirectories(reposPath):
-                reposDir = reposPath + repoDir
-                repo_update(reposDir, reposDir)
+            dirsToUpdate = get_immediate_subdirectories(reposDir)
+            for x in dirsToUpdate:
+                repo_update(x, x)
         except Exception as e:
             print(str(e))
             is_done = False
