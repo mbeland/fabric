@@ -34,7 +34,7 @@ def apt_update():
         try:
             print("Updating system...")
             sudo("apt update", shell=False)
-            sudo("apt -y upgrade", shell=False)
+            sudo("DEBIAN_FRONTEND=noninteractive apt -yq upgrade", shell=False)
         except Exception as e:
             print(str(e))
             is_done = False
@@ -82,12 +82,15 @@ def repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
 
         try:
             with cd(repoDirectory):
+                pathList = run('ls -a')
+                if ".noPull" in pathList.stdout:
+                    print("%s has .noPull - skipping" % repoName)
+                    return is_done
                 r = run('git pull')
                 if 'Already up-to-date' in r.stdout:
                     print("%s already up-to-date" % repoName)
                 else:
                     print("%s updated" % repoName)
-                pathList = run('ls')
                 if 'permset.sh' in pathList.stdout:
                     print("%s - updating permissions" % repoName)
                     run('./permset.sh')
@@ -101,7 +104,7 @@ def repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
 def setup():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
-        apt_sudoers = "matt * = (root) NOPASSWD: /usr/bin/apt"
+        apt_sudoers = "matt * = (root) NOPASSWD:SETENV: /usr/bin/apt"
         yum_sudoers = "matt * = (root) NOPASSWD: /usr/bin/yum"
         power_sudoers = "matt * = (root) NOPASSWD: /sbin/shutdown"
 
@@ -170,7 +173,8 @@ def updateRepos():
                 repo_update(key, repoList[key])
             dirsToUpdate = get_immediate_subdirectories(reposDir)
             for x in dirsToUpdate:
-                repo_update(x, x)
+                y = x.split("/")
+                repo_update(y[-1], x)
         except Exception as e:
             print(str(e))
             is_done = False
