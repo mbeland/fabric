@@ -91,9 +91,9 @@ def repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
                     print("%s already up-to-date" % repoName)
                 else:
                     print("%s updated" % repoName)
-                if 'permset.sh' in pathList.stdout:
+                if '.postpull.sh' in pathList.stdout:
                     print("%s - updating permissions" % repoName)
-                    run('./permset.sh')
+                    run('./.postpull.sh')
         except Exception as e:
             print(str(e))
             is_done = False
