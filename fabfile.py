@@ -34,7 +34,7 @@ def apt_update():
         try:
             print("Updating system...")
             sudo("apt update", shell=False)
-            sudo("DEBIAN_FRONTEND=noninteractive apt -yq upgrade", shell=False)
+            sudo("DEBIAN_FRONTEND=noninteractive apt upgrade -yq", shell=False)
         except Exception as e:
             print(str(e))
             is_done = False
