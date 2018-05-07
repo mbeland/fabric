@@ -112,6 +112,7 @@ def setup():
             sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % apt_sudoers)
             sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % yum_sudoers)
             sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % power_sudoers)
+            run("mkdir ~/repos/")
         except Exception as e:
             print(str(e))
             is_done = False
