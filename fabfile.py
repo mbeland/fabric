@@ -4,6 +4,7 @@ from io import StringIO, BytesIO
 
 
 env.use_ssh_config = True
+scriptFileName = None
 repoList = {}
 
 
@@ -182,14 +183,19 @@ def updateRepos():
         finally:
             return is_done
 
+
 def deploy_script():
-    with show('running', 'stdout', 'stderr'):
+    with hide('running', 'stdout', 'stderr'):
         is_done = True
+        global scriptFileName
 
         try:
-            scriptFileName = input("Script to execute: ")
-            with open(scriptFileName) as scriptFile:
-                run(scriptFile)
+            if scriptFileName == None:
+                scriptFileName = input('Script to execute: ')
+            put(scriptFileName, "/tmp/", mirror_local_mode = True)
+            remotePath = "/tmp/" + scriptFileName
+            run(remotePath)
+            run("rm " + remotePath)
         except Exception as e:
             print(str(e))
             is_done = False
