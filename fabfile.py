@@ -181,3 +181,18 @@ def updateRepos():
             is_done = False
         finally:
             return is_done
+
+def deploy_script():
+    with show('running', 'stdout', 'stderr'):
+        is_done = True
+
+        try:
+            scriptFileName = input("Script to execute: ")
+            scriptFile = open(scriptFileName)
+            run(scriptFile)
+            scriptFile.close()
+        except Exception as e:
+            print(str(e))
+            is_done = False
+        finally:
+            return is_done
