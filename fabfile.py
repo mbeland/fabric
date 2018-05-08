@@ -188,9 +188,8 @@ def deploy_script():
 
         try:
             scriptFileName = input("Script to execute: ")
-            scriptFile = open(scriptFileName)
-            run(scriptFile)
-            scriptFile.close()
+            with open(scriptFileName) as scriptFile:
+                run(scriptFile)
         except Exception as e:
             print(str(e))
             is_done = False
