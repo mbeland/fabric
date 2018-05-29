@@ -1,6 +1,4 @@
 from fabric.api import *
-import os
-from io import StringIO, BytesIO
 
 
 env.use_ssh_config = True
@@ -142,37 +140,15 @@ def updates():
             return is_done
 
 
-def readRepoList():
-    with hide('running', 'stdout', 'stderr'):
-        is_done = True
-        fd = BytesIO()
-
-        try:
-            get('~/.repoList', fd)
-            contents = fd.getvalue().splitlines()
-            for line in contents:
-                line = line.decode()
-                if line.startswith('#'):
-                    next
-                else:
-                    newRep = line.split(':')
-                    repoList[newRep[0]] = newRep[1]
-        except Exception as e:
-            print(str(e))
-            is_done = False
-        finally:
-            return is_done
-
-
 def updateRepos():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
         reposDir = '~/repos/'
 
         try:
-            readRepoList()
-            for key in repoList:
-                repo_update(key, repoList[key])
+            repo_update("Home Bin", "~/bin/")
+            repo_update("SSH", "~/.ssh")
+            repo_update("Home Dir", "~/")
             dirsToUpdate = get_immediate_subdirectories(reposDir)
             for x in dirsToUpdate:
                 y = x.split("/")
@@ -190,9 +166,9 @@ def deploy_script():
         global scriptFileName
 
         try:
-            if scriptFileName == None:
+            if scriptFileName:
                 scriptFileName = input('Script to execute: ')
-            put(scriptFileName, "/tmp/", mirror_local_mode = True)
+            put(scriptFileName, "/tmp/", mirror_local_mode=True)
             remotePath = "/tmp/" + scriptFileName
             run(remotePath)
             run("rm " + remotePath)
