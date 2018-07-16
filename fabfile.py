@@ -104,14 +104,26 @@ def setup():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
         apt_sudoers = "matt * = (root) NOPASSWD:SETENV: /usr/bin/apt"
-        yum_sudoers = "matt * = (root) NOPASSWD: /usr/bin/yum"
         power_sudoers = "matt * = (root) NOPASSWD: /sbin/shutdown"
 
         try:
             sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % apt_sudoers)
-            sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % yum_sudoers)
             sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % power_sudoers)
-            run("mkdir ~/repos/")
+            if not (os.path.isdir("~/repos/")):
+                run("mkdir ~/repos/")
+            if not (os.path.isdir("~/bin/")):
+                run("git clone https://github.com/mbeland/bin.git")
+            if not (os.path.isdir("~/.ssh/.git/")):
+                run("ssh -o StrictHostKeyChecking=no "
+                    "matt@192.168.27.19 \"echo $key >> ~/.ssh/authorized_keys"
+                    " && cd ~/.ssh/ && git add authorized_keys && git commit "
+                    "-m \"Adding $name\" && git push && ssh odin \"cd ~/.ssh/"
+                    " && git pull\"")
+                run("GIT_SSH_COMMAND=\"ssh -o StrictHostKeyChecking=no\" git "
+                    "clone matt@rearviewmirror.org:repos/ssh/")
+                run("git clone matt@rearviewmirror.org:repos/skel/")
+                run("cd ~/ssh/ && ./.initiate.sh")
+                run("cd ~/skel/ && ./.initiate.sh")
         except Exception as e:
             print(str(e))
             is_done = False
@@ -122,17 +134,10 @@ def setup():
 def updates():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
-        sysType = run("[[ -e /usr/bin/apt ]] && echo 'apt' || echo 'yum'")
 
         try:
-            if (sysType == "apt"):
-                apt_update()
-                updateRepos()
-            elif (sysType == "yum"):
-                yum_update()
-                updateRepos()
-            else:
-                raise ValueError("I don't recognize this machine type")
+            apt_update()
+            updateRepos()
         except Exception as e:
             print(str(e))
             is_done = False
