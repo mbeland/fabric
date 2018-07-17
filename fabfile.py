@@ -1,4 +1,5 @@
 from fabric.api import *
+from os import *
 
 
 env.use_ssh_config = True
@@ -13,6 +14,7 @@ def get_immediate_subdirectories(a_dir='~/repos/'):
     return result
 
 
+@serial
 def reboot():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
@@ -33,7 +35,8 @@ def apt_update():
         try:
             print("Updating system...")
             sudo("apt update", shell=False)
-            sudo("DEBIAN_FRONTEND=noninteractive apt upgrade -yq", shell=False)
+            sudo("DEBIAN_FRONTEND=noninteractive apt upgrade -yq", shell=False,
+                 timeout=120)
         except Exception as e:
             print(str(e))
             is_done = False
@@ -109,21 +112,13 @@ def setup():
         try:
             sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % apt_sudoers)
             sudo("echo \"%s\" >> /etc/sudoers.d/fabric" % power_sudoers)
-            if not (os.path.isdir("~/repos/")):
+            pathList = run('ls -a ~')
+            if "repos" not in pathList.stdout:
+                print("No repos dir - creating")
                 run("mkdir ~/repos/")
-            if not (os.path.isdir("~/bin/")):
+            if "bin" not in pathList.stdout:
+                print("No bin dir - cloning")
                 run("git clone https://github.com/mbeland/bin.git")
-            if not (os.path.isdir("~/.ssh/.git/")):
-                run("ssh -o StrictHostKeyChecking=no "
-                    "matt@192.168.27.19 \"echo $key >> ~/.ssh/authorized_keys"
-                    " && cd ~/.ssh/ && git add authorized_keys && git commit "
-                    "-m \"Adding $name\" && git push && ssh odin \"cd ~/.ssh/"
-                    " && git pull\"")
-                run("GIT_SSH_COMMAND=\"ssh -o StrictHostKeyChecking=no\" git "
-                    "clone matt@rearviewmirror.org:repos/ssh/")
-                run("git clone matt@rearviewmirror.org:repos/skel/")
-                run("cd ~/ssh/ && ./.initiate.sh")
-                run("cd ~/skel/ && ./.initiate.sh")
         except Exception as e:
             print(str(e))
             is_done = False
@@ -131,6 +126,7 @@ def setup():
             return is_done
 
 
+@parallel
 def updates():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
