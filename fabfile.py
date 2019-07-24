@@ -38,6 +38,7 @@ def apt_update():
             sudo("apt update", shell=False)
             sudo("DEBIAN_FRONTEND=noninteractive apt upgrade -yq", shell=False,
                  timeout=120)
+            sudo("apt autoremove -yq", shell=False, timeout=120)
         except Exception as e:
             print("{0} - {1}".format(env.host_string, e))
             is_done = False
