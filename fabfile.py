@@ -88,15 +88,19 @@ def repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
             with cd(repoDirectory):
                 pathList = run('ls -a')
                 if ".noPull" in pathList.stdout:
-                    print("{} repo {} has .noPull - skipping".format(env.host_string, repoName))
+                    print("{} repo {} has .noPull - skipping".format(
+                        env.host_string, repoName))
                     return is_done
                 r = run('git pull')
                 if 'Already up-to-date' in r.stdout:
-                    print("{} repo {} already up-to-date".format(env.host_string, repoName))
+                    print("{} repo {} already up-to-date".format(
+                        env.host_string, repoName))
                 else:
-                    print("{} repo {} updated".format(env.host_string, repoName))
+                    print("{} repo {} updated".format(env.host_string,
+                                                      repoName))
                 if '.postpull.sh' in pathList.stdout:
-                    print("{} repo {} - updating permissions".format(env.host_string, repoName))
+                    print("{} repo {} - updating permissions".format(
+                        env.host_string, repoName))
                     run('./.postpull.sh')
         except Exception as e:
             print("{0} - {1}".format(env.host_string, e))
@@ -108,9 +112,9 @@ def repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
 def setup():
     with hide('running', 'stdout', 'stderr'):
         is_done = True
-        apt_sudoers = "matt * = (root) NOPASSWD:SETENV: /usr/bin/apt,"\
+        apt_sudoers = env.user + " * = (root) NOPASSWD:SETENV: /usr/bin/apt,"\
             "/usr/local/bin/apt"
-        power_sudoers = "matt * = (root) NOPASSWD: /sbin/shutdown"
+        power_sudoers = env.user + " * = (root) NOPASSWD: /sbin/shutdown"
 
         try:
             sudo("echo \"{}\" >> /etc/sudoers.d/fabric".format(apt_sudoers))
