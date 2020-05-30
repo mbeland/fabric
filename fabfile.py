@@ -139,7 +139,7 @@ def updates():
         is_done = True
 
         try:
-            pathList = run('ls -a')
+            pathList = run('ls -a ~')
             if ".noApt" in pathList.stdout:
                 print("{} has .noApt - skipping".format(env.host_string))
                 updateRepos()
