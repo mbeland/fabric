@@ -23,7 +23,7 @@ def reboot():
         try:
             sudo("shutdown -r 1", shell=False)
         except Exception as e:
-            print("{0} - {1}".format(env.host_string, e))
+            print("{} - {}".format(env.host_string, e))
             is_done = False
         finally:
             return is_done
@@ -40,7 +40,7 @@ def apt_update():
                  timeout=120)
             sudo("apt autoremove -yq", shell=False, timeout=120)
         except Exception as e:
-            print("{0} - {1}".format(env.host_string, e))
+            print("{} - {}".format(env.host_string, e))
             is_done = False
         finally:
             return is_done
@@ -54,7 +54,7 @@ def yum_update():
             print("Updating {} with yum...".format(env.host_string))
             sudo("yum -y update", shell=False)
         except Exception as e:
-            print("{0} - {1}".format(env.host_string, e))
+            print("{} - {}".format(env.host_string, e))
             is_done = False
         finally:
             return is_done
@@ -74,7 +74,7 @@ def opkg_update():
             else:
                 print("No updated packages on {}".format(env.host_string))
         except Exception as e:
-            print("{0} - {1}".format(env.host_string, e))
+            print("{} - {}".format(env.host_string, e))
             is_done = False
         finally:
             return is_done
@@ -103,7 +103,7 @@ def repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
                         env.host_string, repoName))
                     run('./.postpull.sh')
         except Exception as e:
-            print("{0} - {1}".format(env.host_string, e))
+            print("{} - {}".format(env.host_string, e))
             is_done = False
         finally:
             return is_done
@@ -127,7 +127,7 @@ def setup():
                 print("No bin dir on {} - cloning".format(env.host_string))
                 run("git clone https://github.com/mbeland/bin.git")
         except Exception as e:
-            print("{0} - {1}".format(env.host_string, e))
+            print("{} - {}".format(env.host_string, e))
             is_done = False
         finally:
             return is_done
@@ -139,10 +139,16 @@ def updates():
         is_done = True
 
         try:
-            apt_update()
-            updateRepos()
+            pathList = run('ls -a')
+            if ".noApt" in pathList.stdout:
+                print("{} has .noApt - skipping".format(env.host_string))
+                updateRepos()
+                return is_done
+            else:
+                apt_update()
+                updateRepos()
         except Exception as e:
-            print("{0} - {1}".format(env.host_string, e))
+            print("{} - {}".format(env.host_string, e))
             is_done = False
         finally:
             return is_done
@@ -162,7 +168,7 @@ def updateRepos():
                 y = x.split("/")
                 repo_update(y[-1], x)
         except Exception as e:
-            print("{0} - {1}".format(env.host_string, e))
+            print("{} - {}".format(env.host_string, e))
             is_done = False
         finally:
             return is_done
@@ -181,7 +187,7 @@ def deploy_script():
             run(remotePath)
             run("rm " + remotePath)
         except Exception as e:
-            print("{0} - {1}".format(env.host_string, e))
+            print("{} - {}".format(env.host_string, e))
             is_done = False
         finally:
             return is_done
