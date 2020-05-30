@@ -34,6 +34,10 @@ def apt_update():
         is_done = True
 
         try:
+            pathList = run('ls -a ~')
+            if ".noApt" in pathList.stdout:
+                print "{} has .noApt - skipping".format(env.host_string)
+                return is_done
             print("Updating {} with apt...".format(env.host_string))
             sudo("apt update", shell=False)
             sudo("DEBIAN_FRONTEND=noninteractive apt upgrade -yq", shell=False,
@@ -139,14 +143,8 @@ def updates():
         is_done = True
 
         try:
-            pathList = run('ls -a ~')
-            if ".noApt" in pathList.stdout:
-                print("{} has .noApt - skipping".format(env.host_string))
-                updateRepos()
-                return is_done
-            else:
-                apt_update()
-                updateRepos()
+            apt_update()
+            updateRepos()
         except Exception as e:
             print("{} - {}".format(env.host_string, e))
             is_done = False
