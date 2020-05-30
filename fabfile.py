@@ -36,7 +36,7 @@ def apt_update():
         try:
             pathList = run('ls -a ~')
             if ".noApt" in pathList.stdout:
-                print "{} has .noApt - skipping".format(env.host_string)
+                print ("{} has .noApt - skipping".format(env.host_string))
                 return is_done
             print("Updating {} with apt...".format(env.host_string))
             sudo("apt update", shell=False)
