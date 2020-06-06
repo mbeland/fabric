@@ -95,12 +95,6 @@ def repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
                     print("{} repo {} has .noPull - skipping".format(
                         env.host_string, repoName))
                     return is_done
-                m = run('git status')
-                mr = run('git remote -v')
-                if (('master' in m.stdout) and ('github' not in mr.stdout)):
-                    print("{} repo {} updating to release branch".format(
-                        env.host_string, repoName))
-                    run('~/bin/no_masters.sh')
                 r = run('git pull')
                 if 'Already up-to-date' in r.stdout:
                     print("{} repo {} already up-to-date".format(
@@ -112,7 +106,7 @@ def repo_update(repoName="Home Bin", repoDirectory="~/bin/"):
                     print("{} repo {} - updating permissions".format(
                         env.host_string, repoName))
                     run('./.postpull.sh')
-        except Exception as e:
+        except Fatal as e:
             print("{} - {}".format(env.host_string, e))
             is_done = False
         finally:
